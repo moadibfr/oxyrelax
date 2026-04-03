@@ -80,7 +80,7 @@
 		sessionStatus.set('playing');
 
 		if ($settings.soundEnabled) {
-			audio = createAudioController();
+			audio = createAudioController($settings.soundTheme);
 			audio.start();
 		}
 
@@ -121,7 +121,7 @@
 		sessionStatus.set('playing');
 
 		if ($settings.soundEnabled) {
-			audio = createAudioController();
+			audio = createAudioController($settings.soundTheme);
 			audio.start();
 		}
 

@@ -6,7 +6,8 @@ export const DEFAULT_SETTINGS = {
 	soundEnabled: true,
 	theme: 'system',
 	locale: null,
-	sessionMinutes: 5
+	sessionMinutes: 5,
+	soundTheme: 'classic'
 };
 
 function safeJsonParse(str, fallback) {

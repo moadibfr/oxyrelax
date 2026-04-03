@@ -31,6 +31,17 @@ describe('loadSettings', () => {
 		expect(settings.selectedPresetId).toBe(DEFAULT_SETTINGS.selectedPresetId);
 	});
 
+	it('includes soundTheme default', () => {
+		const settings = loadSettings();
+		expect(settings.soundTheme).toBe('classic');
+	});
+
+	it('preserves stored soundTheme when present', () => {
+		localStorageMock.setItem('oxyrelax-settings', JSON.stringify({ soundTheme: 'oceanDrift' }));
+		const settings = loadSettings();
+		expect(settings.soundTheme).toBe('oceanDrift');
+	});
+
 	it('handles corrupted JSON gracefully', () => {
 		localStorageMock.setItem('oxyrelax-settings', 'not-json');
 		const settings = loadSettings();

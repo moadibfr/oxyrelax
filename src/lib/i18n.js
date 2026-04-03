@@ -27,7 +27,15 @@ export const translations = {
 		customPresetName: 'Preset name',
 		sessionComplete: 'Session complete!',
 		getReady: 'Get ready...',
-		custom: 'Custom'
+		custom: 'Custom',
+		soundTheme: 'Sound theme',
+		classic: 'Classic',
+		softPad: 'Soft Pad',
+		singingBowl: 'Singing Bowl',
+		oceanDrift: 'Ocean Drift',
+		windChime: 'Wind Chime',
+		on: 'On',
+		off: 'Off'
 	},
 	fr: {
 		inhale: 'Inspirez...',
@@ -55,7 +63,15 @@ export const translations = {
 		customPresetName: 'Nom du programme',
 		sessionComplete: 'Session terminée !',
 		getReady: 'Préparez-vous...',
-		custom: 'Personnalisé'
+		custom: 'Personnalisé',
+		soundTheme: 'Thème sonore',
+		classic: 'Classique',
+		softPad: 'Nappe douce',
+		singingBowl: 'Bol tibétain',
+		oceanDrift: 'Vague océane',
+		windChime: 'Carillon',
+		on: 'On',
+		off: 'Off'
 	}
 };
 
