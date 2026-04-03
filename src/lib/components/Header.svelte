@@ -1,11 +1,13 @@
 <script>
 	import { settings, allPresets, activePreset, customPresets, sessionStatus } from '$lib/stores.js';
 	import { t, SUPPORTED_LOCALES } from '$lib/i18n.js';
+	import { SOUND_THEMES } from '$lib/audio.js';
 
 	let isRunning = $derived($sessionStatus !== 'stopped');
 	let locale = $derived($settings.locale || 'en');
 	let preset = $derived($activePreset);
 	let gearOpen = $state(false);
+	let soundOpen = $state(false);
 
 	function selectPreset(id) {
 		settings.update((s) => ({ ...s, selectedPresetId: id }));
@@ -15,45 +17,91 @@
 		settings.update((s) => ({ ...s, soundEnabled: !s.soundEnabled }));
 	}
 
+	function setSoundTheme(themeId) {
+		settings.update((s) => ({ ...s, soundTheme: themeId }));
+	}
+
 	function setLocale(loc) {
 		settings.update((s) => ({ ...s, locale: loc }));
+	}
+
+	function handleSoundClick(e) {
+		e.stopPropagation();
+		soundOpen = !soundOpen;
+		if (soundOpen) gearOpen = false;
 	}
 
 	function handleGearClick(e) {
 		e.stopPropagation();
 		gearOpen = !gearOpen;
+		if (gearOpen) soundOpen = false;
 	}
 
-	function closeGear() {
+	function closePopovers() {
 		gearOpen = false;
+		soundOpen = false;
 	}
 </script>
 
-<svelte:window onclick={closeGear} />
+<svelte:window onclick={closePopovers} />
 
 <header class="header" class:disabled={isRunning}>
 	<h1 class="app-name">OxyRelax</h1>
 
 	<div class="header-controls">
-		<button
-			class="icon-btn"
-			class:muted={!$settings.soundEnabled}
-			onclick={toggleSound}
-			disabled={isRunning}
-			aria-label={t(locale, 'sound')}
-			title={t(locale, 'sound')}
-		>
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-				{#if $settings.soundEnabled}
-					<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-					<path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-				{:else}
-					<line x1="23" y1="9" x2="17" y2="15" />
-					<line x1="17" y1="9" x2="23" y2="15" />
-				{/if}
-			</svg>
-		</button>
+		<div class="sound-wrapper">
+			<button
+				class="icon-btn"
+				class:muted={!$settings.soundEnabled}
+				onclick={handleSoundClick}
+				disabled={isRunning}
+				aria-label={t(locale, 'sound')}
+				title={t(locale, 'sound')}
+			>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+					{#if $settings.soundEnabled}
+						<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+						<path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+					{:else}
+						<line x1="23" y1="9" x2="17" y2="15" />
+						<line x1="17" y1="9" x2="23" y2="15" />
+					{/if}
+				</svg>
+			</button>
+
+			{#if soundOpen}
+				<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+				<div class="sound-popover" onclick={(e) => e.stopPropagation()}>
+					<div class="popover-row">
+						<span>{t(locale, 'sound')}</span>
+						<div class="toggle-group">
+							<button
+								class="toggle-option"
+								class:active={$settings.soundEnabled}
+								onclick={() => { if (!$settings.soundEnabled) toggleSound(); }}
+							>{t(locale, 'on')}</button>
+							<button
+								class="toggle-option"
+								class:active={!$settings.soundEnabled}
+								onclick={() => { if ($settings.soundEnabled) toggleSound(); }}
+							>{t(locale, 'off')}</button>
+						</div>
+					</div>
+					<div class="popover-divider"></div>
+					<div class="theme-list" class:disabled={!$settings.soundEnabled}>
+						{#each SOUND_THEMES as theme}
+							<button
+								class="theme-option"
+								class:active={$settings.soundTheme === theme.id}
+								disabled={!$settings.soundEnabled}
+								onclick={() => setSoundTheme(theme.id)}
+							>{t(locale, theme.labelKey)}</button>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
 
 		<div class="gear-wrapper">
 			<button
@@ -163,6 +211,66 @@
 
 	.icon-btn.muted {
 		opacity: 0.4;
+	}
+
+	.sound-wrapper {
+		position: relative;
+	}
+
+	.sound-popover {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 0.25rem;
+		background: var(--bg-color, #fff);
+		border: 1px solid var(--input-border, rgba(128, 128, 128, 0.2));
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		z-index: 100;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		min-width: 11rem;
+	}
+
+	.popover-divider {
+		height: 1px;
+		background: var(--input-border, rgba(128, 128, 128, 0.2));
+		margin: 0.1rem 0;
+	}
+
+	.theme-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.theme-list.disabled {
+		opacity: 0.4;
+		pointer-events: none;
+	}
+
+	.theme-option {
+		padding: 0.35rem 0.5rem;
+		border: none;
+		background: transparent;
+		color: var(--text-color, inherit);
+		font-size: 0.8rem;
+		cursor: pointer;
+		border-radius: 0.3rem;
+		text-align: left;
+		transition: background 0.15s;
+	}
+
+	.theme-option:hover {
+		background: var(--input-hover, rgba(128, 128, 128, 0.1));
+	}
+
+	.theme-option.active {
+		background: var(--primary-color, #4a9eff);
+		color: white;
+		font-weight: 600;
 	}
 
 	.gear-wrapper {
