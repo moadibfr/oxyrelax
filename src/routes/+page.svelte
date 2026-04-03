@@ -213,6 +213,7 @@
 	}
 
 	:global([data-theme='dark']) {
+		color-scheme: dark;
 		--bg-color: #1a1a2e;
 		--text-color: #e0e0e0;
 		--bar-border: rgba(100, 180, 255, 0.25);
@@ -230,6 +231,7 @@
 
 	@media (prefers-color-scheme: dark) {
 		:global([data-theme='system']) {
+			color-scheme: dark;
 			--bg-color: #1a1a2e;
 			--text-color: #e0e0e0;
 			--bar-border: rgba(100, 180, 255, 0.25);

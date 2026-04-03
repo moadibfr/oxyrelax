@@ -225,9 +225,13 @@
 		padding: 0.45rem 0.6rem;
 		border-radius: 0.5rem;
 		border: 1px solid var(--input-border, rgba(128, 128, 128, 0.2));
-		background: var(--input-bg, rgba(128, 128, 128, 0.08));
+		background-color: var(--input-bg, rgba(128, 128, 128, 0.08));
 		color: var(--text-color, inherit);
+		color-scheme: light dark;
 		font-size: 0.9rem;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
 		cursor: pointer;
 		min-width: 0;
 		max-width: 10rem;
