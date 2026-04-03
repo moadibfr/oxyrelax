@@ -43,7 +43,16 @@
 			aria-label={t(locale, 'sound')}
 			title={t(locale, 'sound')}
 		>
-			{$settings.soundEnabled ? '🔊' : '🔇'}
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+				{#if $settings.soundEnabled}
+					<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+					<path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+				{:else}
+					<line x1="23" y1="9" x2="17" y2="15" />
+					<line x1="17" y1="9" x2="23" y2="15" />
+				{/if}
+			</svg>
 		</button>
 
 		<div class="gear-wrapper">
@@ -103,8 +112,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.5rem 0;
-		gap: 0.5rem;
+		padding: 0.75rem 0;
+		gap: 0.75rem;
+		min-height: 2.75rem;
 	}
 
 	.header.disabled {
@@ -114,7 +124,7 @@
 
 	.app-name {
 		margin: 0;
-		font-size: 1.1rem;
+		font-size: 1.25rem;
 		font-weight: 300;
 		letter-spacing: 0.12em;
 		opacity: 0.7;
@@ -133,10 +143,10 @@
 	.icon-btn {
 		background: none;
 		border: none;
-		font-size: 1.1rem;
+		font-size: 1.35rem;
 		cursor: pointer;
-		padding: 0.3rem;
-		border-radius: 0.3rem;
+		padding: 0.4rem;
+		border-radius: 0.4rem;
 		color: var(--text-color, inherit);
 		transition: opacity 0.15s;
 	}
@@ -206,12 +216,12 @@
 	}
 
 	select {
-		padding: 0.3rem 0.4rem;
-		border-radius: 0.4rem;
+		padding: 0.45rem 0.6rem;
+		border-radius: 0.5rem;
 		border: 1px solid var(--input-border, rgba(128, 128, 128, 0.2));
 		background: var(--input-bg, rgba(128, 128, 128, 0.08));
 		color: var(--text-color, inherit);
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		cursor: pointer;
 		min-width: 0;
 		max-width: 10rem;
