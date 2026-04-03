@@ -179,14 +179,16 @@ function createClassicController() {
 function createSoftPadController() {
 	let audioCtx = null;
 	let oscillators = [];
+	let lfoNodes = [];
 	let gainNode = null;
 	let filterNode = null;
 	let lastPhase = null;
 
 	const BASE_FREQ = 220;
-	const DETUNE_SPREAD = [0, -7, 7, -12, 12]; // cents
-	const PAD_VOLUME = 0.10;
-	const HOLD_VOL = 0.04;
+	// Wider detune spread for richer chorus effect
+	const DETUNE_SPREAD = [0, -15, 15, -25, 25, -8, 8];
+	const PAD_VOLUME = 0.08;
+	const HOLD_VOL = 0.03;
 
 	function start() {
 		try {
@@ -200,19 +202,45 @@ function createSoftPadController() {
 		filterNode = audioCtx.createBiquadFilter();
 		filterNode.type = 'lowpass';
 		filterNode.frequency.value = 600;
-		filterNode.Q.value = 0.7;
+		filterNode.Q.value = 0.5;
 		filterNode.connect(gainNode);
 		gainNode.connect(audioCtx.destination);
 
-		DETUNE_SPREAD.forEach((detune) => {
+		DETUNE_SPREAD.forEach((detune, i) => {
 			const osc = audioCtx.createOscillator();
-			osc.type = 'sine';
+			// Triangle waves for warmer, less synthetic harmonics
+			osc.type = 'triangle';
 			osc.frequency.value = BASE_FREQ;
 			osc.detune.value = detune;
+
+			// Per-oscillator slow LFO for organic pitch drift
+			const lfo = audioCtx.createOscillator();
+			const lfoGain = audioCtx.createGain();
+			lfo.type = 'sine';
+			// Each LFO at a slightly different rate for natural movement
+			lfo.frequency.value = 0.15 + i * 0.07;
+			lfoGain.gain.value = 3 + i * 0.5; // subtle pitch wobble in cents
+			lfo.connect(lfoGain);
+			lfoGain.connect(osc.detune);
+			lfo.start();
+			lfoNodes.push(lfo);
+
 			osc.connect(filterNode);
 			osc.start();
 			oscillators.push(osc);
 		});
+
+		// Master tremolo LFO — gentle volume swell
+		const tremoloLfo = audioCtx.createOscillator();
+		const tremoloGain = audioCtx.createGain();
+		tremoloLfo.type = 'sine';
+		tremoloLfo.frequency.value = 0.12;
+		tremoloGain.gain.value = 0.015; // very subtle volume modulation
+		tremoloLfo.connect(tremoloGain);
+		tremoloGain.connect(gainNode.gain);
+		tremoloLfo.start();
+		lfoNodes.push(tremoloLfo);
+
 		lastPhase = null;
 	}
 
@@ -258,20 +286,22 @@ function createSoftPadController() {
 		[264, 330, 396].forEach((freq, i) => {
 			const osc = audioCtx.createOscillator();
 			const g = audioCtx.createGain();
-			osc.type = 'sine';
+			osc.type = 'triangle';
 			osc.frequency.value = freq;
-			g.gain.value = 0.10;
+			g.gain.value = 0.08;
 			osc.connect(g);
 			g.connect(audioCtx.destination);
 			osc.start(now + i * 0.15);
-			g.gain.setTargetAtTime(0, now + i * 0.15 + 0.5, 0.4);
-			osc.stop(now + i * 0.15 + 2);
+			g.gain.setTargetAtTime(0, now + i * 0.15 + 0.6, 0.5);
+			osc.stop(now + i * 0.15 + 2.5);
 		});
 	}
 
 	function stop() {
 		oscillators.forEach((osc) => { try { osc.stop(); } catch {} });
 		oscillators = [];
+		lfoNodes.forEach((lfo) => { try { lfo.stop(); } catch {} });
+		lfoNodes = [];
 		if (audioCtx) {
 			audioCtx.close();
 			audioCtx = null;
