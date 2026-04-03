@@ -1,5 +1,5 @@
 <script>
-	import { settings, activePreset, customPresets, sessionStatus } from '$lib/stores.js';
+	import { settings, activePreset, customPresets, customPhases, sessionStatus } from '$lib/stores.js';
 	import { createPreset } from '$lib/presets.js';
 	import { t } from '$lib/i18n.js';
 
@@ -24,6 +24,13 @@
 			retainAfterInhale = preset.retainAfterInhale;
 			exhale = preset.exhale;
 			retainAfterExhale = preset.retainAfterExhale;
+		}
+	});
+
+	// Push custom edits to the store so the timer picks them up
+	$effect(() => {
+		if (isCustomMode) {
+			customPhases.set({ inhale, retainAfterInhale, exhale, retainAfterExhale });
 		}
 	});
 

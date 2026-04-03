@@ -50,7 +50,11 @@
 
 	function playCountdownChime() {
 		if (!countdownAudioCtx) {
-			countdownAudioCtx = new AudioContext();
+			try {
+				countdownAudioCtx = new AudioContext();
+			} catch {
+				return;
+			}
 		}
 		const ctx = countdownAudioCtx;
 		const osc = ctx.createOscillator();

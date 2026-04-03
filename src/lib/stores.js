@@ -1,5 +1,5 @@
 import { writable, derived } from 'svelte/store';
-import { BUILT_IN_PRESETS, getCycleDuration } from './presets.js';
+import { BUILT_IN_PRESETS } from './presets.js';
 import { loadSettings, saveSettings, loadCustomPresets, saveCustomPresets, DEFAULT_SETTINGS } from './storage.js';
 import { detectLocale } from './i18n.js';
 
@@ -65,11 +65,22 @@ export const allPresets = derived(customPresets, ($custom) => {
 
 // --- Active preset ---
 
+// --- Custom phase values (editable when in custom mode) ---
+
+export const customPhases = writable({
+	inhale: 5,
+	retainAfterInhale: 0,
+	exhale: 5,
+	retainAfterExhale: 0
+});
+
+// --- Active preset ---
+
 export const activePreset = derived(
-	[settings, allPresets],
-	([$settings, $allPresets]) => {
+	[settings, allPresets, customPhases],
+	([$settings, $allPresets, $customPhases]) => {
 		if ($settings.selectedPresetId === '__custom__') {
-			return { id: '__custom__', name: 'Custom', inhale: 5, retainAfterInhale: 0, exhale: 5, retainAfterExhale: 0, defaultMinutes: 5 };
+			return { id: '__custom__', name: 'Custom', ...$customPhases, defaultMinutes: 5 };
 		}
 		return $allPresets.find((p) => p.id === $settings.selectedPresetId) ?? BUILT_IN_PRESETS[0];
 	}

@@ -63,7 +63,11 @@ export function createAudioController() {
 	}
 
 	function start() {
-		audioCtx = new AudioContext();
+		try {
+			audioCtx = new AudioContext();
+		} catch {
+			return; // Browser blocked audio — fail silently
+		}
 		oscillator = audioCtx.createOscillator();
 		gainNode = audioCtx.createGain();
 
