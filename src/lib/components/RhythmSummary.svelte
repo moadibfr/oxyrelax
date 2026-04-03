@@ -121,9 +121,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		gap: 0.4rem;
-		padding: 0.25rem 0;
-		font-size: 0.9rem;
+		gap: 0.5rem;
+		padding: 0.4rem 0;
+		font-size: 1.1rem;
 		opacity: 0.7;
 	}
 
