@@ -9,7 +9,7 @@ A coherent breathing web app with animated bubble guide, optional sound cues, an
 - 5 built-in breathing presets (Coherent, Box, 4-7-8, Pacify, Reinforce)
 - Custom presets with local storage persistence
 - Animated bubble in a vertical bar + progress fill
-- Optional sound cues (rising/falling tones, chimes at transitions)
+- 5 sound themes (Classic, Soft Pad, Singing Bowl, Ocean Drift, Wind Chime) — all Web Audio synthesis
 - 3-2-1 countdown before sessions
 - Session by duration or cycle count
 - Dark/light theme (follows system preference)

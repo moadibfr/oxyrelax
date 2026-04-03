@@ -47,7 +47,8 @@ export function getVolumeForPhase(phase) {
 function createClassicController() {
 	let audioCtx = null;
 	let oscillator = null;
-	let fifthOsc = null; // subtle perfect fifth harmony
+	let fifthOsc = null;
+	let fifthGainNode = null; // gain for the fifth harmony
 	let gainNode = null;
 	let filterNode = null;
 	let lastPhase = null;
@@ -98,13 +99,12 @@ function createClassicController() {
 
 		// Fifth harmony oscillator (×1.5 frequency, quieter)
 		fifthOsc = audioCtx.createOscillator();
-		const fifthGain = audioCtx.createGain();
+		fifthGainNode = audioCtx.createGain();
 		fifthOsc.type = 'sine';
 		fifthOsc.frequency.value = LOW_FREQ * 1.5;
-		fifthGain.gain.value = FIFTH_VOLUME;
-		fifthOsc.connect(fifthGain);
-		fifthGain.connect(filterNode);
-		fifthOsc._gain = fifthGain; // keep reference for updates
+		fifthGainNode.gain.value = FIFTH_VOLUME;
+		fifthOsc.connect(fifthGainNode);
+		fifthGainNode.connect(filterNode);
 		fifthOsc.start();
 
 		lastPhase = null;
@@ -121,13 +121,13 @@ function createClassicController() {
 		const now = audioCtx.currentTime;
 		if (freq === 0) {
 			gainNode.gain.setTargetAtTime(0, now, 0.1);
-			fifthOsc._gain.gain.setTargetAtTime(0, now, 0.1);
+			fifthGainNode.gain.setTargetAtTime(0, now, 0.1);
 		} else {
 			oscillator.frequency.setTargetAtTime(freq, now, 0.05);
 			gainNode.gain.setTargetAtTime(vol, now, 0.1);
 			// Fifth tracks the main frequency
 			fifthOsc.frequency.setTargetAtTime(freq * 1.5, now, 0.05);
-			fifthOsc._gain.gain.setTargetAtTime(
+			fifthGainNode.gain.setTargetAtTime(
 				phase === 'hold' ? FIFTH_VOLUME * 0.3 : FIFTH_VOLUME, now, 0.1
 			);
 			// Open filter on inhale, close on exhale
@@ -168,6 +168,7 @@ function createClassicController() {
 			audioCtx = null;
 		}
 		gainNode = null;
+		fifthGainNode = null;
 		filterNode = null;
 	}
 
@@ -366,8 +367,24 @@ function createSingingBowlController() {
 
 	function playCompletionChime() {
 		if (!audioCtx) return;
+		// Use Web Audio scheduling instead of setTimeout
+		const now = audioCtx.currentTime;
 		strike(FUNDAMENTAL * 0.75, STRIKE_VOLUME * 1.5);
-		setTimeout(() => strike(FUNDAMENTAL, STRIKE_VOLUME * 1.2), 500);
+		// Schedule second strike 0.5s later using delayed oscillator starts
+		const delayedFreq = FUNDAMENTAL;
+		HARMONICS.forEach((ratio, i) => {
+			const osc = audioCtx.createOscillator();
+			const gain = audioCtx.createGain();
+			osc.type = 'sine';
+			osc.frequency.value = delayedFreq * ratio;
+			gain.gain.value = (STRIKE_VOLUME * 1.2) / (i + 1);
+			osc.connect(gain);
+			gain.connect(audioCtx.destination);
+			osc.start(now + 0.5);
+			gain.gain.setTargetAtTime(0, now + 0.5 + 0.1, 1.5 / (i + 1));
+			osc.stop(now + 0.5 + 6);
+			activeOscillators.push(osc);
+		});
 	}
 
 	function stop() {
