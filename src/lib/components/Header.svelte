@@ -279,7 +279,7 @@
 		border: none;
 		background: transparent;
 		color: var(--text-color, inherit);
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		cursor: pointer;
 		border-radius: 0.3rem;
 		text-align: left;
@@ -322,7 +322,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		font-size: 0.85rem;
+		font-size: 0.95rem;
 	}
 
 	.toggle-group {
@@ -333,11 +333,11 @@
 	}
 
 	.toggle-option {
-		padding: 0.25rem 0.5rem;
+		padding: 0.3rem 0.55rem;
 		border: none;
 		background: var(--input-bg, rgba(128, 128, 128, 0.08));
 		color: var(--text-color, inherit);
-		font-size: 0.75rem;
+		font-size: 0.85rem;
 		cursor: pointer;
 		transition: all 0.15s;
 	}
