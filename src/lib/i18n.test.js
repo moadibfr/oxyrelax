@@ -32,6 +32,22 @@ describe('t', () => {
 	it('falls back to English for unknown locale', () => {
 		expect(t('de', 'inhale')).toBe('Inhale...');
 	});
+
+	it('returns sound theme names in English', () => {
+		expect(t('en', 'classic')).toBe('Classic');
+		expect(t('en', 'softPad')).toBe('Soft Pad');
+		expect(t('en', 'singingBowl')).toBe('Singing Bowl');
+		expect(t('en', 'oceanDrift')).toBe('Ocean Drift');
+		expect(t('en', 'windChime')).toBe('Wind Chime');
+	});
+
+	it('returns sound theme names in French', () => {
+		expect(t('fr', 'classic')).toBe('Classique');
+		expect(t('fr', 'softPad')).toBe('Nappe douce');
+		expect(t('fr', 'singingBowl')).toBe('Bol tibétain');
+		expect(t('fr', 'oceanDrift')).toBe('Vague océane');
+		expect(t('fr', 'windChime')).toBe('Carillon');
+	});
 });
 
 describe('detectLocale', () => {
