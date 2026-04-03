@@ -8,6 +8,7 @@
 	let preset = $derived($activePreset);
 	let gearOpen = $state(false);
 	let soundOpen = $state(false);
+	let presetOpen = $state(false);
 
 	function selectPreset(id) {
 		settings.update((s) => ({ ...s, selectedPresetId: id }));
@@ -28,18 +29,25 @@
 	function handleSoundClick(e) {
 		e.stopPropagation();
 		soundOpen = !soundOpen;
-		if (soundOpen) gearOpen = false;
+		if (soundOpen) { gearOpen = false; presetOpen = false; }
 	}
 
 	function handleGearClick(e) {
 		e.stopPropagation();
 		gearOpen = !gearOpen;
-		if (gearOpen) soundOpen = false;
+		if (gearOpen) { soundOpen = false; presetOpen = false; }
+	}
+
+	function handlePresetClick(e) {
+		e.stopPropagation();
+		presetOpen = !presetOpen;
+		if (presetOpen) { soundOpen = false; gearOpen = false; }
 	}
 
 	function closePopovers() {
 		gearOpen = false;
 		soundOpen = false;
+		presetOpen = false;
 	}
 </script>
 
@@ -146,16 +154,31 @@
 			{/if}
 		</div>
 
-		<select
-			value={preset.id}
-			onchange={(e) => selectPreset(e.target.value)}
-			disabled={isRunning}
-		>
-			{#each $allPresets as p}
-				<option value={p.id}>{p.name}</option>
-			{/each}
-			<option value="__custom__">{t(locale, 'custom')}</option>
-		</select>
+		<div class="preset-wrapper">
+			<button
+				class="preset-btn"
+				onclick={handlePresetClick}
+				disabled={isRunning}
+			>{preset.id === '__custom__' ? t(locale, 'custom') : preset.name}</button>
+
+			{#if presetOpen}
+				<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+				<div class="preset-popover" onclick={(e) => e.stopPropagation()}>
+					{#each $allPresets as p}
+						<button
+							class="theme-option"
+							class:active={preset.id === p.id}
+							onclick={() => { selectPreset(p.id); presetOpen = false; }}
+						>{p.name}</button>
+					{/each}
+					<button
+						class="theme-option"
+						class:active={preset.id === '__custom__'}
+						onclick={() => { selectPreset('__custom__'); presetOpen = false; }}
+					>{t(locale, 'custom')}</button>
+				</div>
+			{/if}
+		</div>
 	</div>
 </header>
 
@@ -329,19 +352,39 @@
 		font-weight: 600;
 	}
 
-	select {
+	.preset-wrapper {
+		position: relative;
+	}
+
+	.preset-btn {
 		padding: 0.45rem 0.6rem;
 		border-radius: 0.5rem;
 		border: 1px solid var(--input-border, rgba(128, 128, 128, 0.2));
 		background-color: var(--input-bg, rgba(128, 128, 128, 0.08));
 		color: var(--text-color, inherit);
-		color-scheme: light dark;
 		font-size: 0.9rem;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		appearance: none;
 		cursor: pointer;
 		min-width: 0;
 		max-width: 10rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.preset-popover {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 0.25rem;
+		background: var(--bg-color, #fff);
+		border: 1px solid var(--input-border, rgba(128, 128, 128, 0.2));
+		border-radius: 0.5rem;
+		padding: 0.4rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		z-index: 100;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		min-width: 10rem;
 	}
 </style>
