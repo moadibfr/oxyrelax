@@ -47,22 +47,29 @@ export function getVolumeForPhase(phase) {
 function createClassicController() {
 	let audioCtx = null;
 	let oscillator = null;
+	let fifthOsc = null; // subtle perfect fifth harmony
 	let gainNode = null;
+	let filterNode = null;
 	let lastPhase = null;
+
+	const FIFTH_VOLUME = 0.05; // much quieter than fundamental
 
 	function playChime() {
 		if (!audioCtx) return;
-		const chimeOsc = audioCtx.createOscillator();
-		const chimeGain = audioCtx.createGain();
-		chimeOsc.type = 'sine';
-		chimeOsc.frequency.value = CHIME_FREQ;
-		chimeGain.gain.value = 0.12;
-		chimeOsc.connect(chimeGain);
-		chimeGain.connect(audioCtx.destination);
 		const now = audioCtx.currentTime;
-		chimeOsc.start(now);
-		chimeGain.gain.setTargetAtTime(0, now + 0.15, 0.12);
-		chimeOsc.stop(now + 0.6);
+		// Two-note chord chime (fundamental + major third) for warmth
+		[CHIME_FREQ, CHIME_FREQ * 1.25].forEach((freq, i) => {
+			const chimeOsc = audioCtx.createOscillator();
+			const chimeGain = audioCtx.createGain();
+			chimeOsc.type = 'sine';
+			chimeOsc.frequency.value = freq;
+			chimeGain.gain.value = i === 0 ? 0.10 : 0.06;
+			chimeOsc.connect(chimeGain);
+			chimeGain.connect(audioCtx.destination);
+			chimeOsc.start(now);
+			chimeGain.gain.setTargetAtTime(0, now + 0.15, 0.18);
+			chimeOsc.stop(now + 0.8);
+		});
 	}
 
 	function start() {
@@ -71,14 +78,35 @@ function createClassicController() {
 		} catch {
 			return;
 		}
+
+		// Low-pass filter to soften the tone
+		filterNode = audioCtx.createBiquadFilter();
+		filterNode.type = 'lowpass';
+		filterNode.frequency.value = 800;
+		filterNode.Q.value = 0.5;
+		filterNode.connect(audioCtx.destination);
+
+		// Main oscillator
 		oscillator = audioCtx.createOscillator();
 		gainNode = audioCtx.createGain();
 		oscillator.type = 'sine';
 		oscillator.frequency.value = LOW_FREQ;
 		gainNode.gain.value = MAIN_VOLUME;
 		oscillator.connect(gainNode);
-		gainNode.connect(audioCtx.destination);
+		gainNode.connect(filterNode);
 		oscillator.start();
+
+		// Fifth harmony oscillator (×1.5 frequency, quieter)
+		fifthOsc = audioCtx.createOscillator();
+		const fifthGain = audioCtx.createGain();
+		fifthOsc.type = 'sine';
+		fifthOsc.frequency.value = LOW_FREQ * 1.5;
+		fifthGain.gain.value = FIFTH_VOLUME;
+		fifthOsc.connect(fifthGain);
+		fifthGain.connect(filterNode);
+		fifthOsc._gain = fifthGain; // keep reference for updates
+		fifthOsc.start();
+
 		lastPhase = null;
 	}
 
@@ -90,41 +118,57 @@ function createClassicController() {
 		lastPhase = phase;
 		const freq = getFrequencyForPhase(phase, progress);
 		const vol = getVolumeForPhase(phase);
+		const now = audioCtx.currentTime;
 		if (freq === 0) {
-			gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+			gainNode.gain.setTargetAtTime(0, now, 0.1);
+			fifthOsc._gain.gain.setTargetAtTime(0, now, 0.1);
 		} else {
-			oscillator.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
-			gainNode.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
+			oscillator.frequency.setTargetAtTime(freq, now, 0.05);
+			gainNode.gain.setTargetAtTime(vol, now, 0.1);
+			// Fifth tracks the main frequency
+			fifthOsc.frequency.setTargetAtTime(freq * 1.5, now, 0.05);
+			fifthOsc._gain.gain.setTargetAtTime(
+				phase === 'hold' ? FIFTH_VOLUME * 0.3 : FIFTH_VOLUME, now, 0.1
+			);
+			// Open filter on inhale, close on exhale
+			const filterTarget = phase === 'inhale'
+				? 800 + 400 * progress
+				: phase === 'exhale'
+					? 1200 - 400 * progress
+					: 700;
+			filterNode.frequency.setTargetAtTime(filterTarget, now, 0.15);
 		}
 	}
 
 	function playCompletionChime() {
 		if (!audioCtx) return;
 		const now = audioCtx.currentTime;
-		for (let i = 0; i < 2; i++) {
-			const chimeOsc = audioCtx.createOscillator();
-			const chimeGain = audioCtx.createGain();
-			chimeOsc.type = 'sine';
-			chimeOsc.frequency.value = CHIME_FREQ * (i === 0 ? 1 : 1.5);
-			chimeGain.gain.value = 0.18;
-			chimeOsc.connect(chimeGain);
-			chimeGain.connect(audioCtx.destination);
-			chimeOsc.start(now + i * 0.3);
-			chimeGain.gain.setTargetAtTime(0, now + i * 0.3 + 0.3, 0.2);
-			chimeOsc.stop(now + i * 0.3 + 1.2);
-		}
+		// Warm two-note completion: root chord then a fifth above
+		[[CHIME_FREQ, CHIME_FREQ * 1.25], [CHIME_FREQ * 1.5, CHIME_FREQ * 1.5 * 1.25]].forEach((chord, i) => {
+			chord.forEach((freq, j) => {
+				const chimeOsc = audioCtx.createOscillator();
+				const chimeGain = audioCtx.createGain();
+				chimeOsc.type = 'sine';
+				chimeOsc.frequency.value = freq;
+				chimeGain.gain.value = j === 0 ? 0.14 : 0.08;
+				chimeOsc.connect(chimeGain);
+				chimeGain.connect(audioCtx.destination);
+				chimeOsc.start(now + i * 0.3);
+				chimeGain.gain.setTargetAtTime(0, now + i * 0.3 + 0.4, 0.25);
+				chimeOsc.stop(now + i * 0.3 + 1.5);
+			});
+		});
 	}
 
 	function stop() {
-		if (oscillator) {
-			oscillator.stop();
-			oscillator = null;
-		}
+		if (oscillator) { try { oscillator.stop(); } catch {} oscillator = null; }
+		if (fifthOsc) { try { fifthOsc.stop(); } catch {} fifthOsc = null; }
 		if (audioCtx) {
 			audioCtx.close();
 			audioCtx = null;
 		}
 		gainNode = null;
+		filterNode = null;
 	}
 
 	return { start, update, stop, playCompletionChime };
